@@ -8,7 +8,10 @@ import (
 	"unicode"
 )
 
-//func refreshScreen() { fmt.Print("\x1b[2J") }
+/*func refreshScreen() {
+	fmt.Print("\x1b[2J")
+	fmt.Print("\x1b[H")
+}*/
 
 func processKeyPress() (exit bool) {
 

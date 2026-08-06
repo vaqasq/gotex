@@ -24,7 +24,7 @@ func main() {
 		if exit {
 			return
 		}
-		//refreshScreen()
+		refreshScreen()
 
 	}
 
