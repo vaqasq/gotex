@@ -22,9 +22,9 @@ func main() {
 
 		exit := processKeyPress()
 		if exit {
+			cleanupScreen()
 			return
 		}
-		refreshScreen()
 
 	}
 

@@ -8,10 +8,33 @@ import (
 	"unicode"
 )
 
-/*func refreshScreen() {
-	fmt.Print("\x1b[2J")
-	fmt.Print("\x1b[H")
-}*/
+//To Do: Get terminal window size for drawRows()
+
+const clearScreen = "\x1b[2J"
+const cursorTopLeft = "\x1b[H"
+
+func cleanupScreen() {
+
+	fmt.Print(clearScreen)
+	fmt.Print(cursorTopLeft)
+
+}
+
+func drawRows() {
+
+	for range 24 {
+		fmt.Print("~\r\n")
+	}
+
+}
+
+func refreshScreen() {
+
+	cleanupScreen()
+
+	drawRows()
+	fmt.Print(cursorTopLeft)
+}
 
 func processKeyPress() (exit bool) {
 
