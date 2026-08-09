@@ -20,12 +20,14 @@ type editorConfig struct {
 	cursorY int
 }
 
-var E editorConfig
+var E editorConfig // initalize editorConfig. Could use struct literal instead
 
 const (
+	// ANSI TERMINAL ESCAPE CODES
 	clearScreen   = "\x1b[2J"
 	cursorTopLeft = "\x1b[H"
 
+	// UNICODE TRANSLATON
 	ESCAPE_SEQUENCE = 27
 	EXIT            = 3
 
@@ -67,30 +69,23 @@ func initializeRawMode() *term.State {
 }
 
 func drawRows() {
-
 	for range E.editorRows {
 		fmt.Print("~\r\n")
 	}
-
 }
 
 func cleanupScreen() {
-
 	fmt.Print(clearScreen)
 	fmt.Print(cursorTopLeft)
-
 }
 
 func refreshScreen() {
-
 	cleanupScreen()
-
 	drawRows()
 	fmt.Printf("\x1b[%d;%dH", E.cursorX+1, E.cursorY+1) // The terminal is 1-indexed, so I add 1 to match up.
 }
 
 func moveCursor(input byte) {
-
 	switch input {
 	case UP_ARROW:
 		E.cursorY += 1
@@ -100,7 +95,6 @@ func moveCursor(input byte) {
 		E.cursorX += 1
 	case LEFT_ARROW:
 		E.cursorX -= 1
-
 	}
 }
 
