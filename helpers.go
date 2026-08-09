@@ -83,9 +83,9 @@ func cleanupScreen() {
 
 func refreshScreen() {
 
-	//cleanupScreen()
+	cleanupScreen()
 
-	//drawRows()
+	drawRows()
 	fmt.Printf("\x1b[%d;%dH", E.cursorX+1, E.cursorY+1) // The terminal is 1-indexed, so I add 1 to match up.
 }
 
