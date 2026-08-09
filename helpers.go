@@ -3,28 +3,53 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"log"
 	"os"
 	"unicode"
+
+	"golang.org/x/term"
 )
 
-//To Do: Get terminal window size for drawRows()
+type editorConfig struct {
+	editorRows    int
+	editorColumns int
+}
+
+var E editorConfig
 
 const clearScreen = "\x1b[2J"
 const cursorTopLeft = "\x1b[H"
+
+func initializeRawMode() *term.State {
+	oldState, err := term.MakeRaw(int(os.Stdin.Fd()))
+	if err != nil {
+		panic(err)
+	}
+
+	width, height, err := term.GetSize(int(os.Stdin.Fd()))
+	if err != nil {
+		panic(err)
+	}
+
+	E = editorConfig{
+		editorColumns: width,
+		editorRows:    height,
+	}
+
+	return oldState
+}
+
+func drawRows() {
+
+	for range E.editorRows {
+		fmt.Print("~\r\n")
+	}
+
+}
 
 func cleanupScreen() {
 
 	fmt.Print(clearScreen)
 	fmt.Print(cursorTopLeft)
-
-}
-
-func drawRows() {
-
-	for range 24 {
-		fmt.Print("~\r\n")
-	}
 
 }
 
@@ -42,7 +67,7 @@ func processKeyPress() (exit bool) {
 
 	b, err := reader.ReadByte() // reads a single entry at a time
 	if err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
 
 	if unicode.IsControl(rune(b)) {

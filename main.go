@@ -11,17 +11,14 @@ import (
 func main() {
 
 	// Raw mode
-	oldState, err := term.MakeRaw(int(os.Stdin.Fd()))
-	if err != nil {
-		panic(err)
-	}
+	oldState := initializeRawMode()
 	defer term.Restore(int(os.Stdin.Fd()), oldState)
 
 	// Main loop
 	for {
 
-		exit := processKeyPress()
-		if exit {
+		exitEditor := processKeyPress()
+		if exitEditor {
 			cleanupScreen()
 			return
 		}
