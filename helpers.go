@@ -9,15 +9,24 @@ import (
 	"golang.org/x/term"
 )
 
+// GLOBAL VARIABLES
+
 type editorConfig struct {
 	editorRows    int
 	editorColumns int
+
+	// Cursor 2D positioning
+	// Don't forget that the terminal is 1-indexed
+	cursorX int
+	cursorY int
 }
 
 var E editorConfig
 
 const clearScreen = "\x1b[2J"
 const cursorTopLeft = "\x1b[H"
+
+// FUNCTIONS
 
 func initializeRawMode() *term.State {
 	oldState, err := term.MakeRaw(int(os.Stdin.Fd()))
@@ -58,14 +67,16 @@ func refreshScreen() {
 	cleanupScreen()
 
 	drawRows()
-	fmt.Print(cursorTopLeft)
+	fmt.Printf("\x1b[%d;%dH", E.cursorX+1, E.cursorY+1) // The terminal is 1-indexed, so I add 1 to match up.
 }
 
 func processKeyPress() (exit bool) {
 
-	reader := bufio.NewReader(os.Stdin) // Bufio's implementation greatly reduces sys calls, requests 4kb of memory.
+	// Bufio's implementation greatly reduces sys calls, requests 4kb of memory.
+	reader := bufio.NewReader(os.Stdin)
 
-	b, err := reader.ReadByte() // reads a single entry at a time
+	// Reads a single entry at a time
+	b, err := reader.ReadByte()
 	if err != nil {
 		panic(err)
 	}
