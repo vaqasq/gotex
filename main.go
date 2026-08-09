@@ -23,6 +23,8 @@ func main() {
 			return
 		}
 
+		refreshScreen()
+
 	}
 
 	// To Do: Add cursor movement

@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"os"
-	"unicode"
 
 	"golang.org/x/term"
 )
@@ -23,8 +22,28 @@ type editorConfig struct {
 
 var E editorConfig
 
-const clearScreen = "\x1b[2J"
-const cursorTopLeft = "\x1b[H"
+const (
+	clearScreen   = "\x1b[2J"
+	cursorTopLeft = "\x1b[H"
+
+	ESCAPE_SEQUENCE = 27
+	EXIT            = 3
+
+	UP_ARROW    = 'C'
+	DOWN_ARROW  = 'D'
+	RIGHT_ARROW = 'B'
+	LEFT_ARROW  = 'A'
+)
+
+// SET IMPLEMENTATIONS
+
+// This allows for O(1) look ups
+var arrowSet = map[byte]struct{}{
+	UP_ARROW:    {},
+	DOWN_ARROW:  {},
+	RIGHT_ARROW: {},
+	LEFT_ARROW:  {},
+}
 
 // FUNCTIONS
 
@@ -64,10 +83,25 @@ func cleanupScreen() {
 
 func refreshScreen() {
 
-	cleanupScreen()
+	//cleanupScreen()
 
-	drawRows()
+	//drawRows()
 	fmt.Printf("\x1b[%d;%dH", E.cursorX+1, E.cursorY+1) // The terminal is 1-indexed, so I add 1 to match up.
+}
+
+func moveCursor(input byte) {
+
+	switch input {
+	case UP_ARROW:
+		E.cursorY += 1
+	case DOWN_ARROW:
+		E.cursorY -= 1
+	case RIGHT_ARROW:
+		E.cursorX += 1
+	case LEFT_ARROW:
+		E.cursorX -= 1
+
+	}
 }
 
 func processKeyPress() (exit bool) {
@@ -81,16 +115,28 @@ func processKeyPress() (exit bool) {
 		panic(err)
 	}
 
-	if unicode.IsControl(rune(b)) {
-		fmt.Println("A control button was pressed!\r")
-		if b == 3 {
-			fmt.Println("Ctrl + C was pressed!\r")
-			return true
+	switch b {
+	case ESCAPE_SEQUENCE: // if the byte is an escape sequence
+		nextBytes, _ := reader.Peek(2)
+		// if the byte is a CSI (Control Sequence Introducer) "["
+		if nextBytes[0] == '[' {
+			// if the input is an arrow key
+			if _, isArrow := arrowSet[nextBytes[1]]; isArrow {
+				moveCursor(nextBytes[1])
+				reader.Discard(2)
+				return false
+			}
 		}
-		return false
-	} else {
+	case EXIT:
+		fmt.Println("Ctrl + C was pressed!\r")
+		return true
+	default:
 		fmt.Printf("%v pressed!\r\n", string(b))
 		return false
 	}
+
+	// for esc sequence case
+	fmt.Printf("%v pressed!\r\n", string(b))
+	return false
 
 }
