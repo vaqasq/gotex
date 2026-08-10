@@ -88,13 +88,21 @@ func refreshScreen() {
 func moveCursor(input byte) {
 	switch input {
 	case UP_ARROW:
-		E.cursorY += 1
+		if E.cursorY != 0 {
+			E.cursorY += 1
+		}
 	case DOWN_ARROW:
-		E.cursorY -= 1
+		if E.cursorY != E.editorRows-1 {
+			E.cursorY -= 1
+		}
 	case RIGHT_ARROW:
-		E.cursorX += 1
+		if E.cursorX != E.editorColumns-1 {
+			E.cursorX += 1
+		}
 	case LEFT_ARROW:
-		E.cursorX -= 1
+		if E.cursorX != 0 {
+			E.cursorX -= 1
+		}
 	}
 }
 
