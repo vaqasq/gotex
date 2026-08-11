@@ -11,12 +11,12 @@ import (
 
 // GLOBAL VARIABLES
 
-type editorConfig struct {
-	screenRows    int
-	screenColumns int
+type Editor struct {
+	file    *os.File
+	scanner *bufio.Scanner
 
-	editorRows int
-	currentRow string
+	// trying out struct embedding. I isn't actually super useful here, but it is fun.
+	config editorConfig
 
 	// Cursor 2D positioning
 	// Don't forget that the terminal is 1-indexed
@@ -24,7 +24,15 @@ type editorConfig struct {
 	cursorY int
 }
 
-var E editorConfig // initalize editorConfig. Could use struct literal instead
+type editorConfig struct {
+	screenRows    int
+	screenColumns int
+
+	editorRows int
+	currentRow string
+}
+
+var E Editor // initalize editorConfig. Could use struct literal instead
 
 const (
 	// ANSI TERMINAL ESCAPE CODES
@@ -64,7 +72,7 @@ func initializeRawMode() *term.State {
 		log.Panicf("Error in  size of the terminal: %v", err)
 	}
 
-	E = editorConfig{
+	E.config = editorConfig{
 		screenColumns: width,
 		screenRows:    height,
 	}
@@ -73,7 +81,7 @@ func initializeRawMode() *term.State {
 }
 
 func drawRows() {
-	for range E.screenRows {
+	for range E.config.screenRows {
 		fmt.Print("~\r\n")
 	}
 }
@@ -96,11 +104,11 @@ func moveCursor(input byte) {
 			E.cursorY -= 1
 		}
 	case DOWN_ARROW:
-		if E.cursorY != E.screenRows-2 {
+		if E.cursorY != E.config.screenRows-2 {
 			E.cursorY += 1
 		}
 	case RIGHT_ARROW:
-		if E.cursorX != E.screenColumns-1 {
+		if E.cursorX != E.config.screenColumns-1 {
 			E.cursorX += 1
 		}
 	case LEFT_ARROW:
@@ -112,6 +120,44 @@ func moveCursor(input byte) {
 
 func homePage() {
 	fmt.Print("\nWelcome to Gotex! To edit a file, provide the name of the file as the flag when running Gotex in the command line!\r\n\n")
+}
+
+func parseArgs() *os.File {
+
+	if len(os.Args) == 1 {
+		homePage()
+		return nil
+	}
+
+	fileName := os.Args[1]
+	file, err := os.Open(fileName)
+	if err != nil {
+		log.Panicf("Opening File Failed: %v", err)
+	}
+
+	scanner := bufio.NewScanner(file)
+
+	E.file = file
+	E.scanner = scanner
+
+	return E.file
+
+}
+
+func run() {
+
+	for {
+
+		exitEditor := processKeyPress()
+		if exitEditor {
+			cleanupScreen()
+			return
+		}
+
+		refreshScreen()
+
+	}
+
 }
 
 func processKeyPress() (exit bool) {
