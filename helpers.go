@@ -30,7 +30,8 @@ type editorConfig struct {
 	screenColumns int
 }
 
-var E Editor // initalize editorConfig. Could use struct literal instead
+// initalize Editor. Could use struct literal instead
+var E Editor
 
 const (
 	// ANSI TERMINAL ESCAPE CODES
@@ -80,7 +81,7 @@ func initializeRawMode() *term.State {
 
 func displayFileContents() {
 	for _, line := range E.Lines {
-		fmt.Print(line)
+		fmt.Printf("%s\r\n", line)
 	}
 }
 
