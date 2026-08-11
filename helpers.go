@@ -12,8 +12,7 @@ import (
 // GLOBAL VARIABLES
 
 type Editor struct {
-	file    *os.File
-	scanner *bufio.Scanner
+	Lines []string
 
 	// trying out struct embedding. I isn't actually super useful here, but it is fun.
 	config editorConfig
@@ -25,11 +24,10 @@ type Editor struct {
 }
 
 type editorConfig struct {
+
+	// Terminal data
 	screenRows    int
 	screenColumns int
-
-	editorRows int
-	currentRow string
 }
 
 var E Editor // initalize editorConfig. Could use struct literal instead
@@ -80,10 +78,14 @@ func initializeRawMode() *term.State {
 	return oldState
 }
 
-func drawRows() {
-	for range E.config.screenRows {
-		fmt.Print("~\r\n")
+func displayFileContents() {
+	for _, line := range E.Lines {
+		fmt.Print(line)
 	}
+}
+
+func displayCursor() {
+	fmt.Printf("\x1b[%d;%dH", E.cursorX+1, E.cursorY+1) // The terminal is 1-indexed, so I add 1 to match up.
 }
 
 func cleanupScreen() {
@@ -93,8 +95,8 @@ func cleanupScreen() {
 
 func refreshScreen() {
 	cleanupScreen()
-	drawRows()
-	fmt.Printf("\x1b[%d;%dH", E.cursorX+1, E.cursorY+1) // The terminal is 1-indexed, so I add 1 to match up.
+	displayFileContents()
+	displayCursor()
 }
 
 func moveCursor(input byte) {
@@ -137,10 +139,14 @@ func parseArgs() *os.File {
 
 	scanner := bufio.NewScanner(file)
 
-	E.file = file
-	E.scanner = scanner
+	for scanner.Scan() {
+		E.Lines = append(E.Lines, scanner.Text())
+	}
+	if err := scanner.Err(); err != nil {
+		log.Panicf("Error in bufio.scanner: %v", err)
+	}
 
-	return E.file
+	return file
 
 }
 
@@ -153,7 +159,6 @@ func run() {
 			cleanupScreen()
 			return
 		}
-
 		refreshScreen()
 
 	}
