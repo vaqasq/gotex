@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"log"
 	"os"
 
 	"golang.org/x/term"
@@ -11,8 +12,11 @@ import (
 // GLOBAL VARIABLES
 
 type editorConfig struct {
-	editorRows    int
-	editorColumns int
+	screenRows    int
+	screenColumns int
+
+	editorRows int
+	currentRow string
 
 	// Cursor 2D positioning
 	// Don't forget that the terminal is 1-indexed
@@ -52,24 +56,24 @@ var arrowSet = map[byte]struct{}{
 func initializeRawMode() *term.State {
 	oldState, err := term.MakeRaw(int(os.Stdin.Fd()))
 	if err != nil {
-		panic(err)
+		log.Panicf("Error in initializing raw mode: %v", err)
 	}
 
 	width, height, err := term.GetSize(int(os.Stdin.Fd()))
 	if err != nil {
-		panic(err)
+		log.Panicf("Error in  size of the terminal: %v", err)
 	}
 
 	E = editorConfig{
-		editorColumns: width,
-		editorRows:    height,
+		screenColumns: width,
+		screenRows:    height,
 	}
 
 	return oldState
 }
 
 func drawRows() {
-	for range E.editorRows {
+	for range E.screenRows {
 		fmt.Print("~\r\n")
 	}
 }
@@ -92,11 +96,11 @@ func moveCursor(input byte) {
 			E.cursorY -= 1
 		}
 	case DOWN_ARROW:
-		if E.cursorY != E.editorRows-2 {
+		if E.cursorY != E.screenRows-2 {
 			E.cursorY += 1
 		}
 	case RIGHT_ARROW:
-		if E.cursorX != E.editorColumns-1 {
+		if E.cursorX != E.screenColumns-1 {
 			E.cursorX += 1
 		}
 	case LEFT_ARROW:
@@ -104,6 +108,10 @@ func moveCursor(input byte) {
 			E.cursorX -= 1
 		}
 	}
+}
+
+func homePage() {
+	fmt.Print("\nWelcome to Gotex! To edit a file, provide the name of the file as the flag when running Gotex in the command line!\r\n\n")
 }
 
 func processKeyPress() (exit bool) {
@@ -114,7 +122,7 @@ func processKeyPress() (exit bool) {
 	// Reads a single entry at a time
 	b, err := reader.ReadByte()
 	if err != nil {
-		panic(err)
+		log.Panicf("Error when reading in bytes: %v", err)
 	}
 
 	switch b {
@@ -123,7 +131,7 @@ func processKeyPress() (exit bool) {
 		// if the byte is a CSI (Control Sequence Introducer) "["
 		if nextBytes[0] == '[' {
 			// if the input is an arrow key
-			if _, isArrow := arrowSet[nextBytes[1]]; isArrow {
+			if _, isArrowKey := arrowSet[nextBytes[1]]; isArrowKey {
 				moveCursor(nextBytes[1])
 				reader.Discard(2)
 				return false
