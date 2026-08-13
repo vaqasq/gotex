@@ -81,6 +81,8 @@ func initializeRawMode() *term.State {
 		screenRows:    height,
 	}
 
+	E.rowOffset = 0
+
 	return oldState
 }
 
