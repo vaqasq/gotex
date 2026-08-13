@@ -21,6 +21,8 @@ type Editor struct {
 	// Don't forget that the terminal is 1-indexed
 	cursorX int
 	cursorY int
+
+	rowOffset int
 }
 
 type editorConfig struct {
@@ -42,10 +44,10 @@ const (
 	ESCAPE_SEQUENCE = 27
 	EXIT            = 3
 
-	UP_ARROW    = 'C'
-	DOWN_ARROW  = 'D'
-	RIGHT_ARROW = 'B'
-	LEFT_ARROW  = 'A'
+	UP_ARROW    = 'A'
+	DOWN_ARROW  = 'B'
+	RIGHT_ARROW = 'C'
+	LEFT_ARROW  = 'D'
 )
 
 // SET IMPLEMENTATIONS
@@ -79,14 +81,28 @@ func initializeRawMode() *term.State {
 	return oldState
 }
 
+func visibleLines() []string {
+	if len(E.Lines) == 0 {
+		return nil
+	}
+
+	start := E.rowOffset
+	if start < 0 {
+		start = 0
+	}
+
+	end := min(len(E.Lines), start+E.config.screenRows)
+	return E.Lines[start:end]
+}
+
 func displayFileContents() {
-	for _, line := range E.Lines {
+	for _, line := range visibleLines() {
 		fmt.Printf("%s\r\n", line)
 	}
 }
 
 func displayCursor() {
-	fmt.Printf("\x1b[%d;%dH", E.cursorX+1, E.cursorY+1) // The terminal is 1-indexed, so I add 1 to match up.
+	fmt.Printf("\x1b[%d;%dH", E.cursorY+1, E.cursorX+1) // The terminal is 1-indexed, so I add 1 to match up.
 }
 
 func cleanupScreen() {
@@ -103,12 +119,19 @@ func refreshScreen() {
 func moveCursor(input byte) {
 	switch input {
 	case UP_ARROW:
-		if E.cursorX != 0 {
+		if E.cursorY > 0 {
 			E.cursorY -= 1
+		} else if E.rowOffset > 0 {
+			E.rowOffset -= 1
 		}
 	case DOWN_ARROW:
-		if E.cursorY != E.config.screenRows-2 {
+		if E.rowOffset+E.cursorY >= len(E.Lines)-1 {
+			return
+		}
+		if E.cursorY < E.config.screenRows-1 {
 			E.cursorY += 1
+		} else {
+			E.rowOffset += 1
 		}
 	case RIGHT_ARROW:
 		if E.cursorX != E.config.screenColumns-1 {
@@ -153,14 +176,16 @@ func parseArgs() *os.File {
 
 func run() {
 
+	E.cursorX, E.cursorY, E.rowOffset = 0, 0, 0
+
 	for {
 
+		refreshScreen()
 		exitEditor := processKeyPress()
 		if exitEditor {
 			cleanupScreen()
 			return
 		}
-		refreshScreen()
 
 	}
 
