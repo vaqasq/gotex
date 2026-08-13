@@ -42,8 +42,11 @@ const (
 
 	// UNICODE TRANSLATON
 	ESCAPE_SEQUENCE = 27
-	EXIT            = 3
+	EXIT            = 3  // Control C
+	PAGE_UP         = 26 // Control Q
+	PAGE_DOWN       = 24 // Control A
 
+	// These are preceeded by the ESCAPE_SEQUENCE + [
 	UP_ARROW    = 'A'
 	DOWN_ARROW  = 'B'
 	RIGHT_ARROW = 'C'
@@ -79,6 +82,25 @@ func initializeRawMode() *term.State {
 	}
 
 	return oldState
+}
+
+// I choose 15 Lines
+
+func pageUp() {
+	if E.rowOffset > 15 {
+		E.rowOffset -= 15
+	} else {
+		E.rowOffset = 0
+	}
+}
+
+func pageDown() {
+	linesLeft := len(E.Lines) - (E.rowOffset + E.config.screenRows)
+	if linesLeft > 15 {
+		E.rowOffset += 15
+	} else {
+		E.rowOffset += linesLeft
+	}
 }
 
 func visibleLines() []string {
@@ -216,6 +238,12 @@ func processKeyPress() (exit bool) {
 	case EXIT:
 		fmt.Println("Ctrl + C was pressed!\r")
 		return true
+	case PAGE_UP:
+		pageUp()
+		return false
+	case PAGE_DOWN:
+		pageDown()
+		return false
 	default:
 		fmt.Printf("%v pressed!\r\n", string(b))
 		return false
