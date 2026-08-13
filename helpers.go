@@ -86,11 +86,7 @@ func visibleLines() []string {
 		return nil
 	}
 
-	start := E.rowOffset
-	if start < 0 {
-		start = 0
-	}
-
+	start := max(0, E.rowOffset)
 	end := min(len(E.Lines), start+E.config.screenRows)
 	return E.Lines[start:end]
 }
