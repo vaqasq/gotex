@@ -43,8 +43,8 @@ const (
 	// UNICODE TRANSLATON
 	ESCAPE_SEQUENCE = 27
 	EXIT            = 3  // Control C
-	PAGE_UP         = 26 // Control Q
-	PAGE_DOWN       = 24 // Control A
+	PAGE_UP         = 26 // Control Z
+	PAGE_DOWN       = 24 // Control X
 
 	// These are preceeded by the ESCAPE_SEQUENCE + [
 	UP_ARROW    = 'A'
