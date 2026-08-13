@@ -121,9 +121,12 @@ func moveCursor(input byte) {
 			E.rowOffset -= 1
 		}
 	case DOWN_ARROW:
+
+		// Prevents out of bounds errors by setting a limit. You can only go so far beyond the file. Removes possibility of indexing out of E.Lines
 		if E.rowOffset+E.cursorY >= len(E.Lines)-1 {
 			return
 		}
+
 		if E.cursorY < E.config.screenRows-1 {
 			E.cursorY += 1
 		} else {
