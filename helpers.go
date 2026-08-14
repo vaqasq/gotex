@@ -126,7 +126,7 @@ func displayFileContents() {
 }
 
 func displayStatusBar() {
-	fmt.Printf("\033[34m%s\033[0m, \033[32m%d Lines\033[0m, \033[31m%v\033[0m", E.fileName, len(E.Lines), time.Now().Format("2006-01-02 15:04"))
+	fmt.Printf("\033[34m%s\033[0m \033[32m%d Lines\033[0m \033[33m%v\033[0m \033[31m%s\033[0m", E.fileName, len(E.Lines), time.Now().Format("2006-01-02 8:04"), "Ctrl+C to Quit")
 }
 
 func displayCursor() {
