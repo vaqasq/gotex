@@ -25,6 +25,8 @@ type Editor struct {
 	cursorY int
 
 	rowOffset int
+
+	currentRow int
 }
 
 type editorConfig struct {
@@ -85,6 +87,8 @@ func initializeRawMode() *term.State {
 	}
 
 	E.rowOffset = 0
+	E.cursorY = 1
+	E.cursorX = 1
 
 	return oldState
 }
@@ -126,11 +130,15 @@ func displayFileContents() {
 }
 
 func displayStatusBar() {
-	fmt.Printf("\033[34m%s\033[0m \033[32m%d Lines\033[0m \033[33m%v\033[0m \033[31m%s\033[0m", E.fileName, len(E.Lines), time.Now().Format(time.Kitchen), "Ctrl+C to Quit")
+	fmt.Printf("\033[34m%s\033[0m \033[32m%d Lines\033[0m \033[33m%v\033[0m \033[31m%s\033[0m currRow: %d rowOffset %d cursY %d", E.fileName, len(E.Lines), time.Now().Format(time.Kitchen), "Ctrl+C to Quit", E.currentRow, E.rowOffset, E.cursorY)
 }
 
 func displayCursor() {
-	fmt.Printf("\x1b[%d;%dH", E.cursorY+1, E.cursorX+1) // The terminal is 1-indexed, so I add 1 to match up.
+	fmt.Printf("\x1b[%d;%dH", E.cursorY, E.cursorX) // The terminal is 1-indexed, so I add 1 to match up.
+}
+
+func updateCurrentRow() {
+	E.currentRow = E.rowOffset + E.cursorY + 1
 }
 
 func cleanupScreen() {
@@ -142,6 +150,7 @@ func refreshScreen() {
 	cleanupScreen()
 	displayFileContents()
 	displayCursor()
+	updateCurrentRow()
 }
 
 func moveCursor(input byte) {
@@ -194,6 +203,8 @@ func parseArgs() *os.File {
 
 	scanner := bufio.NewScanner(file)
 
+	E.Lines = append(E.Lines, "\n") // First line not being printed to terminal, added this to fix it.
+
 	for scanner.Scan() {
 		E.Lines = append(E.Lines, scanner.Text())
 	}
@@ -206,8 +217,6 @@ func parseArgs() *os.File {
 }
 
 func run() {
-
-	E.cursorX, E.cursorY, E.rowOffset = 0, 0, 0
 
 	for {
 
