@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"time"
 
 	"golang.org/x/term"
 )
@@ -12,7 +13,8 @@ import (
 // GLOBAL VARIABLES
 
 type Editor struct {
-	Lines []string
+	Lines    []string
+	fileName string
 
 	// trying out struct embedding. I isn't actually super useful here, but it is fun.
 	config editorConfig
@@ -45,6 +47,7 @@ const (
 	EXIT            = 3  // Control C
 	PAGE_UP         = 26 // Control Z
 	PAGE_DOWN       = 24 // Control X
+	PAGING_VALUE    = 20
 
 	// These are preceeded by the ESCAPE_SEQUENCE + [
 	UP_ARROW    = 'A'
@@ -78,7 +81,7 @@ func initializeRawMode() *term.State {
 
 	E.config = editorConfig{
 		screenColumns: width,
-		screenRows:    height,
+		screenRows:    height - 1, // Makes space for status bar
 	}
 
 	E.rowOffset = 0
@@ -89,8 +92,8 @@ func initializeRawMode() *term.State {
 // I choose 15 Lines
 
 func pageUp() {
-	if E.rowOffset > 15 {
-		E.rowOffset -= 15
+	if E.rowOffset > PAGING_VALUE {
+		E.rowOffset -= PAGING_VALUE
 	} else {
 		E.rowOffset = 0
 	}
@@ -98,8 +101,8 @@ func pageUp() {
 
 func pageDown() {
 	linesLeft := len(E.Lines) - (E.rowOffset + E.config.screenRows)
-	if linesLeft > 15 {
-		E.rowOffset += 15
+	if linesLeft > PAGING_VALUE {
+		E.rowOffset += PAGING_VALUE
 	} else {
 		E.rowOffset += linesLeft
 	}
@@ -119,6 +122,11 @@ func displayFileContents() {
 	for _, line := range visibleLines() {
 		fmt.Printf("%s\r\n", line)
 	}
+	displayStatusBar()
+}
+
+func displayStatusBar() {
+	fmt.Printf("\033[34m%s\033[0m, \033[32m%d Lines\033[0m, \033[31m%v\033[0m", E.fileName, len(E.Lines), time.Now().Format("2006-01-02 15:04"))
 }
 
 func displayCursor() {
@@ -178,8 +186,8 @@ func parseArgs() *os.File {
 		return nil
 	}
 
-	fileName := os.Args[1]
-	file, err := os.Open(fileName)
+	E.fileName = os.Args[1]
+	file, err := os.Open(E.fileName)
 	if err != nil {
 		log.Panicf("Opening File Failed: %v", err)
 	}
