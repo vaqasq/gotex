@@ -16,7 +16,7 @@ type Editor struct {
 	Lines    []string
 	fileName string
 
-	// trying out struct embedding. I isn't actually super useful here, but it is fun.
+	// trying out struct embedding. It isn't actually super useful here, but it is fun.
 	config editorConfig
 
 	// Cursor 2D positioning
@@ -130,7 +130,7 @@ func displayFileContents() {
 }
 
 func displayStatusBar() {
-	fmt.Printf("\033[34m%s\033[0m \033[32m%d Lines\033[0m \033[33m%v\033[0m \033[31m%s\033[0m currRow: %d rowOffset %d cursY %d", E.fileName, len(E.Lines), time.Now().Format(time.Kitchen), "Ctrl+C to Quit", E.currentRow, E.rowOffset, E.cursorY)
+	fmt.Printf("\033[34m%s\033[0m \033[32m%d Lines\033[0m \033[33m%v\033[0m \033[31m%s\033[0m currRow: %d rowOffset %d cursX %d cursY %d", E.fileName, len(E.Lines), time.Now().Format(time.Kitchen), "Ctrl+C to Quit", E.currentRow, E.rowOffset, E.cursorX, E.cursorY)
 }
 
 func displayCursor() {
@@ -138,7 +138,7 @@ func displayCursor() {
 }
 
 func updateCurrentRow() {
-	E.currentRow = E.rowOffset + E.cursorY + 1
+	E.currentRow = E.rowOffset + E.cursorY
 }
 
 func cleanupScreen() {
@@ -147,10 +147,10 @@ func cleanupScreen() {
 }
 
 func refreshScreen() {
+	updateCurrentRow() // updates MUST happen before redrawing, duh.
 	cleanupScreen()
 	displayFileContents()
 	displayCursor()
-	updateCurrentRow()
 }
 
 func moveCursor(input byte) {
