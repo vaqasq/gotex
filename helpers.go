@@ -169,7 +169,7 @@ func moveCursor(input byte) {
 			return
 		}
 
-		if E.cursorY < E.config.screenRows-1 {
+		if E.cursorY < E.config.screenRows {
 			E.cursorY += 1
 		} else {
 			E.rowOffset += 1
