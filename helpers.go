@@ -130,7 +130,8 @@ func displayFileContents() {
 }
 
 func displayStatusBar() {
-	fmt.Printf("\033[34m%s\033[0m \033[32m%d Lines\033[0m \033[33m%v\033[0m \033[31m%s\033[0m currRow: %d rowOffset %d cursX %d cursY %d", E.fileName, len(E.Lines), time.Now().Format(time.Kitchen), "Ctrl+C to Quit", E.currentRow, E.rowOffset, E.cursorX, E.cursorY)
+	fmt.Printf("\033[34m%s\033[0m \033[32m%d Lines\033[0m \033[33m%v\033[0m \033[31m%s\033[0m currRow: %d rowOffset %d cursX %d cursY %d",
+		E.fileName, len(E.Lines), time.Now().Format(time.Kitchen), "Ctrl+C to Quit", E.currentRow, E.rowOffset, E.cursorX, E.cursorY)
 }
 
 func displayCursor() {
@@ -156,7 +157,7 @@ func refreshScreen() {
 func moveCursor(input byte) {
 	switch input {
 	case UP_ARROW:
-		if E.cursorY > 0 {
+		if E.cursorY > 1 {
 			E.cursorY -= 1
 		} else if E.rowOffset > 0 {
 			E.rowOffset -= 1
@@ -178,7 +179,7 @@ func moveCursor(input byte) {
 			E.cursorX += 1
 		}
 	case LEFT_ARROW:
-		if E.cursorX != 0 {
+		if E.cursorX > 1 {
 			E.cursorX -= 1
 		}
 	}
@@ -271,5 +272,4 @@ func processKeyPress() (exit bool) {
 	// for esc sequence case
 	fmt.Printf("%v pressed!\r\n", string(b))
 	return false
-
 }
