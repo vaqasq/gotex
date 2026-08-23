@@ -26,6 +26,7 @@ type Editor struct {
 
 	rowOffset int
 
+	// This is 1-indexed. Subtract to get the index in E.Lines
 	currentRow int
 
 	// These act like static variables in C!
@@ -114,6 +115,7 @@ func pageUp() {
 		// Bring cursor to top of file
 		if E.pageUpCounter > 1 {
 			E.cursorY = 1
+			E.cursorX = 1
 		}
 	}
 
@@ -133,6 +135,7 @@ func pageDown() {
 		// Bring cursor to bottom of file
 		if E.pageDownCounter > 1 {
 			E.cursorY = E.config.screenRows
+			E.cursorX = 1
 		}
 	}
 
@@ -208,7 +211,7 @@ func moveCursor(input byte) {
 			E.rowOffset += 1
 		}
 	case RIGHT_ARROW:
-		if E.cursorX != E.config.screenColumns-1 {
+		if E.cursorX != len(E.Lines[E.currentRow-1]) {
 			E.cursorX += 1
 		}
 	case LEFT_ARROW:
