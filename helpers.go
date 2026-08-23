@@ -184,9 +184,22 @@ func cleanupScreen() {
 func refreshScreen() {
 	// updates MUST happen before redrawing, duh.
 	updateCurrentRowVar()
+
+	// Relies on currentRow to be updated
+	// Inefficient because not every key input is an arrow movement up or down
+	checkBounds()
+
 	cleanupScreen()
 	displayFileContents()
 	displayCursor()
+}
+
+// This function makes sure that if a user if arrowing up and down
+// that their cursor stays in the bounds of the E.Lines row
+func checkBounds() {
+	if E.cursorX > len(E.Lines[E.currentRow-1]) {
+		E.cursorX = len(E.Lines[E.currentRow-1])
+	}
 }
 
 func moveCursor(input byte) {
@@ -197,6 +210,7 @@ func moveCursor(input byte) {
 		} else if E.rowOffset > 0 {
 			E.rowOffset -= 1
 		}
+
 	case DOWN_ARROW:
 
 		// Prevents out of bounds errors by setting a limit.
@@ -210,6 +224,7 @@ func moveCursor(input byte) {
 		} else {
 			E.rowOffset += 1
 		}
+
 	case RIGHT_ARROW:
 		if E.cursorX != len(E.Lines[E.currentRow-1]) {
 			E.cursorX += 1
