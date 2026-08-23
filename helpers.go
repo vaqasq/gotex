@@ -198,7 +198,7 @@ func moveCursor(input byte) {
 
 		// Prevents out of bounds errors by setting a limit.
 		// Removes possibility of indexing out of E.Lines
-		if E.rowOffset+E.cursorY >= len(E.Lines)-1 {
+		if E.rowOffset+E.cursorY >= len(E.Lines) {
 			return
 		}
 
