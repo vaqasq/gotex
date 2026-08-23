@@ -55,11 +55,13 @@ const (
 	cursorTopLeft = "\x1b[H"
 
 	// UNICODE TRANSLATON
+	// Is there a better way of doing this? strconv package?
 	ESCAPE_SEQUENCE = 27
 	EXIT            = 3  // Control C
 	PAGE_UP         = 26 // Control Z
 	PAGE_DOWN       = 24 // Control X
 	PAGING_VALUE    = 20
+	TAB             = 9
 
 	// These are preceeded by the ESCAPE_SEQUENCE + [
 	UP_ARROW    = 'A'
@@ -213,6 +215,14 @@ func checkBounds() {
 	}
 }
 
+func tab() {
+	if E.cursorX+TAB_WIDTH > len(E.Lines[E.currentRow-1]) {
+		E.cursorX = len(E.Lines[E.currentRow-1])
+	} else {
+		E.cursorX += TAB_WIDTH
+	}
+}
+
 func moveCursor(input byte) {
 	switch input {
 	case UP_ARROW:
@@ -327,6 +337,9 @@ func processKeyPress() (exit bool) {
 		return false
 	case PAGE_DOWN:
 		pageDown()
+		return false
+	case TAB:
+		tab()
 		return false
 	default:
 		fmt.Printf("%v pressed!\r\n", string(b))

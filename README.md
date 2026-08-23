@@ -10,4 +10,8 @@ Gotex has a problem with sentences that wrap around as opposed to if the user ma
 The size of a tab (\t) is assumed to be 8 pixels. This can and will create problems if you terminal font size is different.
 
 
-### Fix: Tab character messing up checkBounds. checkBounds is also inefficiently called.
+### Fix: 
+Tab character messing up checkBounds. checkBounds is also inefficiently called.
+
+Doing the following is problematic, since it doesn't account for the length of the \t. A function could fix this.
+E.cursorX = len(E.Lines[E.currentRow-1])
