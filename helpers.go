@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 	"time"
 
 	"golang.org/x/term"
@@ -65,6 +66,9 @@ const (
 	DOWN_ARROW  = 'B'
 	RIGHT_ARROW = 'C'
 	LEFT_ARROW  = 'D'
+
+	// OTHER
+	TAB_WIDTH = 8
 )
 
 // SET IMPLEMENTATIONS
@@ -198,9 +202,14 @@ func refreshScreen() {
 // This function makes sure that if a user if arrowing up and down
 // that their cursor stays in the bounds of the E.Lines row
 func checkBounds() {
-	// Check if tab in E.Lines[E.currentRow-1]. then add the number of E.cursorX pixels to E.cursorX
 	if E.cursorX > len(E.Lines[E.currentRow-1]) {
 		E.cursorX = len(E.Lines[E.currentRow-1])
+
+		// Currently not detecting the \t properly??
+		if strings.Contains(E.Lines[E.currentRow-1], "\t") {
+			E.cursorX += TAB_WIDTH
+		}
+
 	}
 }
 
