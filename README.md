@@ -5,6 +5,8 @@ The Vim Engine alone is ~400,000 lines of C code. I initially was surprised by t
 
 ### Shortcomings
 
+strconv could have likely replaced my long list of supported constants.
+
 Gotex has a problem with sentences that wrap around as opposed to if the user manually hits enter when the text goes too rightward. I believe this is because scanner.Scan() breaks text into segments based on newline breaks (\n).
 
 The size of a tab (\t) is assumed to be 8 pixels. This can and will create problems if you terminal font size is different.

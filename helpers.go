@@ -54,8 +54,7 @@ const (
 	clearScreen   = "\x1b[2J"
 	cursorTopLeft = "\x1b[H"
 
-	// UNICODE TRANSLATON
-	// Is there a better way of doing this? strconv package?
+	// UNICODE DECIMAL TRANSLATON
 	ESCAPE_SEQUENCE = 27
 	EXIT            = 3  // Control C
 	PAGE_UP         = 26 // Control Z
