@@ -27,6 +27,14 @@ type Editor struct {
 	rowOffset int
 
 	currentRow int
+
+	// These act like static variables in C!
+	//
+	// Example
+	// If the user tries to pageDown when they have already reached the bottom of the file,
+	// I will move the cursor to the bottom
+	pageDownCounter int
+	pageUpCounter   int
 }
 
 type editorConfig struct {
@@ -83,7 +91,8 @@ func initializeRawMode() *term.State {
 
 	E.config = editorConfig{
 		screenColumns: width,
-		screenRows:    height - 1, // Makes space for status bar
+		// Makes space for status bar
+		screenRows: height - 1,
 	}
 
 	E.rowOffset = 0
@@ -96,20 +105,39 @@ func initializeRawMode() *term.State {
 // I choose 15 Lines
 
 func pageUp() {
+
+	// Paging Logic
 	if E.rowOffset > PAGING_VALUE {
 		E.rowOffset -= PAGING_VALUE
 	} else {
 		E.rowOffset = 0
+		// Bring cursor to top of file
+		if E.pageUpCounter > 1 {
+			E.cursorY = 1
+		}
 	}
+
+	E.pageUpCounter += 1
+	E.pageDownCounter = 0
 }
 
 func pageDown() {
+
+	//Paging Logic
 	linesLeft := len(E.Lines) - (E.rowOffset + E.config.screenRows)
 	if linesLeft > PAGING_VALUE {
 		E.rowOffset += PAGING_VALUE
 	} else {
 		E.rowOffset += linesLeft
+
+		// Bring cursor to bottom of file
+		if E.pageDownCounter > 1 {
+			E.cursorY = E.config.screenRows
+		}
 	}
+
+	E.pageDownCounter += 1
+	E.pageUpCounter = 0
 }
 
 func visibleLines() []string {
@@ -130,15 +158,18 @@ func displayFileContents() {
 }
 
 func displayStatusBar() {
-	fmt.Printf("\033[34m%s\033[0m \033[32m%d Lines\033[0m \033[33m%v\033[0m \033[31m%s\033[0m currRow: %d rowOffset %d cursX %d cursY %d",
-		E.fileName, len(E.Lines), time.Now().Format(time.Kitchen), "Ctrl+C to Quit", E.currentRow, E.rowOffset, E.cursorX, E.cursorY)
+	fmt.Printf("\033[34m%s\033[0m \033[32m%d Lines\033[0m \033[33m%v\033[0m \033[31m%s\033[0m "+
+		"currRow: %d rowOffset %d cursX %d cursY %d",
+		E.fileName, len(E.Lines), time.Now().Format(time.Kitchen),
+		"Ctrl+C to Quit", E.currentRow, E.rowOffset, E.cursorX, E.cursorY)
 }
 
 func displayCursor() {
-	fmt.Printf("\x1b[%d;%dH", E.cursorY, E.cursorX) // The terminal is 1-indexed, so I add 1 to match up.
+	// The terminal is 1-indexed, so I add 1 to match up.
+	fmt.Printf("\x1b[%d;%dH", E.cursorY, E.cursorX)
 }
 
-func updateCurrentRow() {
+func updateCurrentRowVar() {
 	E.currentRow = E.rowOffset + E.cursorY
 }
 
@@ -148,7 +179,8 @@ func cleanupScreen() {
 }
 
 func refreshScreen() {
-	updateCurrentRow() // updates MUST happen before redrawing, duh.
+	// updates MUST happen before redrawing, duh.
+	updateCurrentRowVar()
 	cleanupScreen()
 	displayFileContents()
 	displayCursor()
@@ -164,7 +196,8 @@ func moveCursor(input byte) {
 		}
 	case DOWN_ARROW:
 
-		// Prevents out of bounds errors by setting a limit. You can only go so far beyond the file. Removes possibility of indexing out of E.Lines
+		// Prevents out of bounds errors by setting a limit.
+		// Removes possibility of indexing out of E.Lines
 		if E.rowOffset+E.cursorY >= len(E.Lines)-1 {
 			return
 		}
@@ -186,7 +219,8 @@ func moveCursor(input byte) {
 }
 
 func homePage() {
-	fmt.Print("\nWelcome to Gotex! To edit a file, provide the name of the file as the flag when running Gotex in the command line!\r\n\n")
+	fmt.Print("\nWelcome to Gotex! To edit a file, provide the name of the " +
+		"file as the flag when running Gotex in the command line!\r\n\n")
 }
 
 func parseArgs() *os.File {
@@ -204,7 +238,8 @@ func parseArgs() *os.File {
 
 	scanner := bufio.NewScanner(file)
 
-	E.Lines = append(E.Lines, "\n") // First line not being printed to terminal, added this to fix it.
+	// First line not being printed to terminal, added this to fix it.
+	E.Lines = append(E.Lines, "\n")
 
 	for scanner.Scan() {
 		E.Lines = append(E.Lines, scanner.Text())
