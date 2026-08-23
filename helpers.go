@@ -187,6 +187,7 @@ func refreshScreen() {
 
 	// Relies on currentRow to be updated
 	// Inefficient because not every key input is an arrow movement up or down
+	// Will not worry about this optimization for now
 	checkBounds()
 
 	cleanupScreen()
@@ -197,6 +198,7 @@ func refreshScreen() {
 // This function makes sure that if a user if arrowing up and down
 // that their cursor stays in the bounds of the E.Lines row
 func checkBounds() {
+	// Check if tab in E.Lines[E.currentRow-1]. then add the number of E.cursorX pixels to E.cursorX
 	if E.cursorX > len(E.Lines[E.currentRow-1]) {
 		E.cursorX = len(E.Lines[E.currentRow-1])
 	}
