@@ -7,6 +7,7 @@ import (
 	"os"
 	"strings"
 	"time"
+	"unicode"
 
 	"golang.org/x/term"
 )
@@ -214,6 +215,21 @@ func checkBounds() {
 	}
 }
 
+func insertRune(b rune) {
+
+	index := E.cursorX
+
+	runeConversion := []rune(E.Lines[E.currentRow-1])
+	newString := []rune{}
+
+	newString = append(newString, runeConversion[:index]...)
+	newString = append(newString, b)
+	newString = append(newString, runeConversion[index:]...)
+
+	E.Lines[E.currentRow-1] = string(newString)
+
+}
+
 func tab() {
 	if E.cursorX+TAB_WIDTH > len(E.Lines[E.currentRow-1]) {
 		E.cursorX = len(E.Lines[E.currentRow-1])
@@ -341,7 +357,9 @@ func processKeyPress() (exit bool) {
 		tab()
 		return false
 	default:
-		fmt.Printf("%v pressed!\r\n", string(b))
+		if unicode.IsPrint(rune(b)) {
+			insertRune(rune(b))
+		}
 		return false
 	}
 
