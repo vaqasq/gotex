@@ -292,9 +292,6 @@ func parseArgs() *os.File {
 
 	scanner := bufio.NewScanner(file)
 
-	// First line not being printed to terminal, added this to fix it.
-	E.Lines = append(E.Lines, "\n")
-
 	for scanner.Scan() {
 		E.Lines = append(E.Lines, scanner.Text())
 	}
