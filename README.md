@@ -14,9 +14,3 @@ The size of a tab (\t) is assumed to be 8 pixels. This can and will create probl
 The editor reads in bytes, no runes. Therefore, text in the editor is limited to ASCII.
 
 ### Fix: 
-Tab character messing up checkBounds. checkBounds is also inefficiently called.
-
-Doing the following is problematic, since it doesn't account for the length of the \t. A function could fix this.
-E.cursorX = len(E.Lines[E.currentRow-1])
-
-The Fix: Instead of treating the lines as strings, treat them as slices of runes, and if the given coordinate is the rune '/t', act accordingly.

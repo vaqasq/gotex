@@ -52,6 +52,9 @@ type editorConfig struct {
 // initalize Editor. Could use struct literal instead
 var E Editor
 
+// Represents the largest cursorX value possible for the current editor line
+var furthestRight int
+
 const (
 	// ANSI TERMINAL ESCAPE CODES
 	clearScreen   = "\x1b[2J"
@@ -211,7 +214,7 @@ func checkBounds() {
 
 	// No need to add extra 1 for E.cursorX 1-indexing because len() is total runes, not 0-indexed.
 	// Add 1 so that the user can go 1 further beyond the current text. Will need to be reflected in insertion code
-	furthestRight := len(E.Lines[E.currentRowIndex]) + 1
+	furthestRight = len(E.Lines[E.currentRowIndex]) + 1
 
 	// Accounting for tabs
 	for _, val := range E.Lines[E.currentRowIndex] {
@@ -226,10 +229,9 @@ func checkBounds() {
 		E.cursorX = furthestRight
 
 		// checkBounds for when the line begins with a tab
-	} else if len(E.Lines[E.currentRowIndex]) > 0 && E.Lines[E.currentRowIndex][0] == '\t' && E.cursorX <= TAB_WIDTH {
+	} else if len(E.Lines[E.currentRowIndex]) > 0 && E.Lines[E.currentRowIndex][0] == '\t' && E.cursorX < TAB_WIDTH {
 
 		E.cursorX = TAB_WIDTH
-		E.Lines[1] = []rune("checkBounds Activated")
 
 	}
 }
@@ -275,7 +277,7 @@ func moveCursor(input byte) {
 		}
 
 	case RIGHT_ARROW:
-		if E.cursorX != len(E.Lines[E.currentRow-1]) {
+		if E.cursorX != furthestRight {
 			E.cursorX += 1
 		}
 	case LEFT_ARROW:
