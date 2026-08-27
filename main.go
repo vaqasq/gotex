@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 
 	"golang.org/x/term"
@@ -18,10 +17,6 @@ func main() {
 	}
 	defer file.Close()
 
-	// Trying to figure out how \t looks
-	for _, str := range E.Lines {
-		fmt.Println(str[0], "\r")
-	}
 	run()
 
 }
