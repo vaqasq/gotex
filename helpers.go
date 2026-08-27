@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"strings"
+	"slices"
 	"time"
 	"unicode"
 
@@ -15,7 +15,7 @@ import (
 // GLOBAL VARIABLES
 
 type Editor struct {
-	Lines    []string
+	Lines    [][]rune
 	fileName string
 
 	// trying out struct embedding. It isn't actually super useful here, but it is fun.
@@ -30,6 +30,8 @@ type Editor struct {
 
 	// This is 1-indexed. Subtract to get the index in E.Lines
 	currentRow int
+
+	currentRowIndex int
 
 	// These act like static variables in C!
 	//
@@ -102,9 +104,9 @@ func initializeRawMode() *term.State {
 		screenRows: height - 1,
 	}
 
-	E.rowOffset = 0
 	E.cursorY = 1
 	E.cursorX = 1
+	E.currentRow = 1
 
 	return oldState
 }
@@ -149,7 +151,7 @@ func pageDown() {
 	E.pageUpCounter = 0
 }
 
-func visibleLines() []string {
+func visibleLines() [][]rune {
 	if len(E.Lines) == 0 {
 		return nil
 	}
@@ -161,7 +163,7 @@ func visibleLines() []string {
 
 func displayFileContents() {
 	for _, line := range visibleLines() {
-		fmt.Printf("%s\r\n", line)
+		fmt.Printf("%s\r\n", string(line))
 	}
 	displayStatusBar()
 }
@@ -204,13 +206,30 @@ func refreshScreen() {
 // This function makes sure that if a user if arrowing up and down
 // that their cursor stays in the bounds of the E.Lines row
 func checkBounds() {
-	if E.cursorX > len(E.Lines[E.currentRow-1]) {
-		E.cursorX = len(E.Lines[E.currentRow-1])
 
-		// Currently not detecting the \t properly??
-		if strings.Contains(E.Lines[E.currentRow-1], "\t") {
-			E.cursorX += TAB_WIDTH
+	E.currentRowIndex = E.currentRow - 1
+
+	// No need to add extra 1 for E.cursorX 1-indexing because len() is total runes, not 0-indexed.
+	// Add 1 so that the user can go 1 further beyond the current text. Will need to be reflected in insertion code
+	furthestRight := len(E.Lines[E.currentRowIndex]) + 1
+
+	// Accounting for tabs
+	for _, val := range E.Lines[E.currentRowIndex] {
+		if val == '\t' {
+			furthestRight += TAB_WIDTH - 1 // Already 1 space in there
 		}
+	}
+
+	// checksBounds for a normal line that does not contain a tab
+	if E.cursorX > furthestRight {
+
+		E.cursorX = furthestRight
+
+		// checkBounds for when the line begins with a tab
+	} else if len(E.Lines[E.currentRowIndex]) > 0 && E.Lines[E.currentRowIndex][0] == '\t' && E.cursorX <= TAB_WIDTH {
+
+		E.cursorX = TAB_WIDTH
+		E.Lines[1] = []rune("checkBounds Activated")
 
 	}
 }
@@ -219,14 +238,8 @@ func insertRune(b rune) {
 
 	index := E.cursorX
 
-	runeConversion := []rune(E.Lines[E.currentRow-1])
-	newString := []rune{}
-
-	newString = append(newString, runeConversion[:index]...)
-	newString = append(newString, b)
-	newString = append(newString, runeConversion[index:]...)
-
-	E.Lines[E.currentRow-1] = string(newString)
+	// E.currentRow-1 is the index for the current text line in the editor, []rune
+	E.Lines[E.currentRow-1] = slices.Insert(E.Lines[E.currentRow-1], index, b)
 
 }
 
@@ -293,7 +306,7 @@ func parseArgs() *os.File {
 	scanner := bufio.NewScanner(file)
 
 	for scanner.Scan() {
-		E.Lines = append(E.Lines, scanner.Text())
+		E.Lines = append(E.Lines, []rune(scanner.Text()))
 	}
 	if err := scanner.Err(); err != nil {
 		log.Panicf("Error in bufio.scanner: %v", err)
@@ -323,7 +336,7 @@ func processKeyPress() (exit bool) {
 	// Bufio's implementation greatly reduces sys calls, requests 4kb of memory.
 	reader := bufio.NewReader(os.Stdin)
 
-	// Reads a single entry at a time
+	// Reads a single entry at a time.
 	b, err := reader.ReadByte()
 	if err != nil {
 		log.Panicf("Error when reading in bytes: %v", err)
