@@ -31,7 +31,8 @@ type Editor struct {
 	// This is 1-indexed. Subtract to get the index in E.Lines
 	currentRow int
 
-	currentRowIndex int
+	currentRowIndex       int
+	currentWithinRowIndex int
 
 	// These act like static variables in C!
 	//
@@ -132,7 +133,7 @@ func pageUp() {
 		}
 	}
 
-	E.pageUpCounter += 1
+	E.pageUpCounter++
 	E.pageDownCounter = 0
 }
 
@@ -152,7 +153,7 @@ func pageDown() {
 		}
 	}
 
-	E.pageDownCounter += 1
+	E.pageDownCounter++
 	E.pageUpCounter = 0
 }
 
@@ -175,9 +176,9 @@ func displayFileContents() {
 
 func displayStatusBar() {
 	fmt.Printf("\033[34m%s\033[0m \033[32m%d Lines\033[0m \033[33m%v\033[0m \033[31m%s\033[0m "+
-		"currRow: %d rowOffset %d cursX %d cursY %d",
+		"currRow: %d rowOffset %d cursX %d cursY %d currWithinRowIndex %d",
 		E.fileName, len(E.Lines), time.Now().Format(time.Kitchen),
-		"Ctrl+C to Quit", E.currentRow, E.rowOffset, E.cursorX, E.cursorY)
+		"Ctrl+C to Quit", E.currentRow, E.rowOffset, E.cursorX, E.cursorY, E.currentWithinRowIndex)
 }
 
 func displayCursor() {
@@ -245,7 +246,7 @@ func insertRune(b rune) {
 	// E.currentRow-1 is the index for the current text line in the editor, []rune
 	E.Lines[E.currentRowIndex] = slices.Insert(E.Lines[E.currentRowIndex], index, b)
 
-	E.cursorX += 1
+	E.cursorX++
 }
 
 func tab() {
@@ -262,11 +263,23 @@ func backspace() {
 		E.Lines[E.currentRowIndex] = slices.Delete(E.Lines[E.currentRowIndex], E.cursorX-1, E.cursorX)
 	}
 
-	// add deletion of tabs and lines
+	if len(E.Lines[E.currentRowIndex]) == 1 {
+		E.cursorY--
+		E.Lines = slices.Delete(E.Lines, E.currentRowIndex, E.currentRowIndex+1)
+	}
 
 }
 
 func enter() {
+
+	// Need to calculate the index that E.cursorX is actually hovering over because tabs mess this up.
+	E.currentWithinRowIndex = E.cursorX - 1
+
+	for _, value := range E.Lines[E.currentRowIndex] {
+		if value == '\t' {
+			E.currentWithinRowIndex -= 7
+		}
+	}
 
 	// If the enter is the at end of the current line
 	if E.cursorX == len(E.Lines[E.currentRowIndex])+1 {
@@ -276,14 +289,14 @@ func enter() {
 		// Otherwise in the midst of a given line
 	} else {
 
-		// FIX THIS
-		E.Lines = slices.Insert(E.Lines, E.currentRowIndex+1, E.Lines[E.currentRowIndex][E.cursorX-1:])
-		// Delete this from the previous line
-		E.Lines[E.currentRowIndex] = slices.Delete(E.Lines[E.currentRowIndex], E.cursorX-1, len(E.Lines[E.currentRowIndex]))
+		E.Lines = slices.Insert(E.Lines, E.currentRowIndex+1, E.Lines[E.currentRowIndex][E.currentWithinRowIndex:])
+		// Move rightside of cursor down
+		E.Lines[E.currentRowIndex] = slices.Delete(E.Lines[E.currentRowIndex], E.currentWithinRowIndex, len(E.Lines[E.currentRowIndex]))
 	}
 
+	E.currentWithinRowIndex = 0
 	E.cursorX = 1
-	E.cursorY += 1
+	E.cursorY++
 
 }
 
@@ -291,9 +304,9 @@ func moveCursor(input byte) {
 	switch input {
 	case UP_ARROW:
 		if E.cursorY > 1 {
-			E.cursorY -= 1
+			E.cursorY--
 		} else if E.rowOffset > 0 {
-			E.rowOffset -= 1
+			E.rowOffset--
 		}
 
 	case DOWN_ARROW:
@@ -305,18 +318,20 @@ func moveCursor(input byte) {
 		}
 
 		if E.cursorY < E.config.screenRows {
-			E.cursorY += 1
+			E.cursorY++
 		} else {
-			E.rowOffset += 1
+			E.rowOffset++
 		}
 
 	case RIGHT_ARROW:
 		if E.cursorX != furthestRight {
-			E.cursorX += 1
+			E.cursorX++
+			E.currentWithinRowIndex++
 		}
 	case LEFT_ARROW:
 		if E.cursorX > 1 {
-			E.cursorX -= 1
+			E.cursorX--
+			E.currentWithinRowIndex--
 		}
 	}
 }
