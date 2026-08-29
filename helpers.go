@@ -67,6 +67,8 @@ const (
 	PAGE_DOWN       = 24 // Control X
 	PAGING_VALUE    = 20
 	TAB             = 9
+	BACKSPACE       = 127
+	ENTER           = 13
 
 	// These are preceeded by the ESCAPE_SEQUENCE + [
 	UP_ARROW    = 'A'
@@ -241,17 +243,48 @@ func insertRune(b rune) {
 	index := E.cursorX - 1
 
 	// E.currentRow-1 is the index for the current text line in the editor, []rune
-	E.Lines[E.currentRow-1] = slices.Insert(E.Lines[E.currentRow-1], index, b)
+	E.Lines[E.currentRowIndex] = slices.Insert(E.Lines[E.currentRowIndex], index, b)
 
 	E.cursorX += 1
 }
 
 func tab() {
-	if E.cursorX+TAB_WIDTH > len(E.Lines[E.currentRow-1]) {
-		E.cursorX = len(E.Lines[E.currentRow-1])
+	if E.cursorX+TAB_WIDTH > len(E.Lines[E.currentRowIndex]) {
+		E.cursorX = len(E.Lines[E.currentRowIndex])
 	} else {
 		E.cursorX += TAB_WIDTH
 	}
+}
+
+func backspace() {
+
+	if len(E.Lines[E.currentRowIndex]) >= E.cursorX {
+		E.Lines[E.currentRowIndex] = slices.Delete(E.Lines[E.currentRowIndex], E.cursorX-1, E.cursorX)
+	}
+
+	// add deletion of tabs and lines
+
+}
+
+func enter() {
+
+	// If the enter is the at end of the current line
+	if E.cursorX == len(E.Lines[E.currentRowIndex])+1 {
+
+		E.Lines = slices.Insert(E.Lines, E.currentRowIndex+1, []rune{})
+
+		// Otherwise in the midst of a given line
+	} else {
+
+		// FIX THIS
+		E.Lines = slices.Insert(E.Lines, E.currentRowIndex+1, E.Lines[E.currentRowIndex][E.cursorX-1:])
+		// Delete this from the previous line
+		E.Lines[E.currentRowIndex] = slices.Delete(E.Lines[E.currentRowIndex], E.cursorX-1, len(E.Lines[E.currentRowIndex]))
+	}
+
+	E.cursorX = 1
+	E.cursorY += 1
+
 }
 
 func moveCursor(input byte) {
@@ -368,6 +401,12 @@ func processKeyPress() (exit bool) {
 		return false
 	case TAB:
 		tab()
+		return false
+	case BACKSPACE:
+		backspace()
+		return false
+	case ENTER:
+		enter()
 		return false
 	default:
 		if unicode.IsPrint(rune(b)) {

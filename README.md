@@ -14,4 +14,6 @@ The size of a tab (\t) is assumed to be 8 pixels. This can and will create probl
 The editor reads in bytes, no runes. Therefore, text in the editor is limited to ASCII.
 
 ### Fix/Next Steps: 
-- Inserting code
+- add a X-index feature to checkBounds()
+- Add Enter handling, proper tab insertion, backspace, etc
+- Saving Changes
