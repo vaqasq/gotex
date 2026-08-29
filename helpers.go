@@ -235,6 +235,7 @@ func checkBounds() {
 	} else if len(E.Lines[E.currentRowIndex]) > 0 && E.Lines[E.currentRowIndex][0] == '\t' && E.cursorX < TAB_WIDTH {
 
 		E.cursorX = TAB_WIDTH
+		E.currentWithinRowIndex = 0
 
 	}
 }
@@ -288,11 +289,13 @@ func enter() {
 
 		// Otherwise in the midst of a given line
 	} else {
+		// use append to force a mem copy.
+		remainingText := append([]rune(nil), E.Lines[E.currentRowIndex][E.currentWithinRowIndex:]...)
+		E.Lines = slices.Insert(E.Lines, E.currentRowIndex+1, remainingText)
+		E.Lines[E.currentRowIndex] = E.Lines[E.currentRowIndex][:E.currentWithinRowIndex]
 
-		E.Lines = slices.Insert(E.Lines, E.currentRowIndex+1, E.Lines[E.currentRowIndex][E.currentWithinRowIndex:])
-		// Move rightside of cursor down
-		E.Lines[E.currentRowIndex] = slices.Delete(E.Lines[E.currentRowIndex], E.currentWithinRowIndex, len(E.Lines[E.currentRowIndex]))
 	}
+	fmt.Printf("Printing! --> %d\n", E.Lines[E.currentRowIndex+1])
 
 	E.currentWithinRowIndex = 0
 	E.cursorX = 1
@@ -406,7 +409,7 @@ func processKeyPress() (exit bool) {
 			}
 		}
 	case EXIT:
-		fmt.Println("Ctrl + C was pressed!\r")
+		fmt.Println("bye\r")
 		return true
 	case PAGE_UP:
 		pageUp()
@@ -431,6 +434,6 @@ func processKeyPress() (exit bool) {
 	}
 
 	// for esc sequence case
-	fmt.Printf("%v pressed!\r\n", string(b))
+	//fmt.Printf("%v pressed!\r\n", string(b))
 	return false
 }
