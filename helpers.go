@@ -238,11 +238,12 @@ func checkBounds() {
 
 func insertRune(b rune) {
 
-	index := E.cursorX
+	index := E.cursorX - 1
 
 	// E.currentRow-1 is the index for the current text line in the editor, []rune
 	E.Lines[E.currentRow-1] = slices.Insert(E.Lines[E.currentRow-1], index, b)
 
+	E.cursorX += 1
 }
 
 func tab() {
