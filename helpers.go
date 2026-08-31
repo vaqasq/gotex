@@ -250,7 +250,7 @@ func checkBounds() {
 	} else if len(E.Lines[E.currentRowIndex]) > 0 && E.Lines[E.currentRowIndex][0] == '\t' && E.cursorX < TAB_WIDTH {
 
 		E.cursorX = TAB_WIDTH
-		E.currentWithinRowIndex = 1
+		E.currentWithinRowIndex = 0
 
 	}
 }
@@ -266,17 +266,15 @@ func insertRune(b rune) {
 }
 
 func tab() {
-	if E.cursorX+TAB_WIDTH > len(E.Lines[E.currentRowIndex]) {
-		E.cursorX = len(E.Lines[E.currentRowIndex])
-	} else {
-		E.cursorX += TAB_WIDTH
-	}
+	E.Lines[E.currentRowIndex] = slices.Insert(E.Lines[E.currentRowIndex], E.currentWithinRowIndex, '\t')
+	E.cursorX += TAB_WIDTH
+	E.currentWithinRowIndex++
 }
 
 func backspace() {
 
-	if len(E.Lines[E.currentRowIndex]) >= E.cursorX {
-		E.Lines[E.currentRowIndex] = slices.Delete(E.Lines[E.currentRowIndex], E.cursorX-1, E.cursorX)
+	if E.currentWithinRowIndex < len(E.Lines[E.currentRowIndex]) {
+		E.Lines[E.currentRowIndex] = slices.Delete(E.Lines[E.currentRowIndex], E.currentWithinRowIndex, E.currentWithinRowIndex+1)
 	}
 
 	if len(E.Lines[E.currentRowIndex]) == 0 {
@@ -284,6 +282,11 @@ func backspace() {
 			E.cursorY--
 		}
 		E.Lines = slices.Delete(E.Lines, E.currentRowIndex, E.currentRowIndex+1)
+	}
+
+	if E.currentWithinRowIndex == 0 && E.Lines[E.currentRowIndex][0] == '\t' {
+		E.Lines[E.currentRowIndex] = slices.Delete(E.Lines[E.currentRowIndex], 0, 1)
+		E.cursorX = 1
 	}
 
 }
@@ -335,13 +338,21 @@ func moveCursor(input byte) {
 
 	case RIGHT_ARROW:
 		if E.cursorX != furthestRight {
-			E.cursorX++
 			E.currentWithinRowIndex++
+			if E.Lines[E.currentRowIndex][E.currentWithinRowIndex] == '\t' {
+				E.cursorX += TAB_WIDTH
+			} else {
+				E.cursorX++
+			}
 		}
 	case LEFT_ARROW:
-		if E.cursorX > 1 {
-			E.cursorX--
+		if E.cursorX > 1 && E.currentWithinRowIndex > 0 {
 			E.currentWithinRowIndex--
+			if E.Lines[E.currentRowIndex][E.currentWithinRowIndex] == '\t' {
+				E.cursorX -= TAB_WIDTH
+			} else {
+				E.cursorX--
+			}
 		}
 	}
 }
