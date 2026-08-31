@@ -199,8 +199,6 @@ func refreshScreen() {
 	// updates MUST happen before redrawing, duh.
 	updateCurrentRowVar()
 
-	updateCurrentWithinRowIndex()
-
 	// Relies on currentRow to be updated
 	// Inefficient because not every key input is an arrow movement up or down
 	// Will not worry about this optimization for now
@@ -209,19 +207,6 @@ func refreshScreen() {
 	cleanupScreen()
 	displayFileContents()
 	displayCursor()
-}
-
-func updateCurrentWithinRowIndex() {
-
-	// Need to calculate the index that E.cursorX is actually hovering over because tabs mess this up.
-	E.currentWithinRowIndex = E.cursorX - 1
-
-	for _, value := range E.Lines[E.currentRowIndex] {
-		if value == '\t' {
-			E.currentWithinRowIndex -= 7
-		}
-	}
-
 }
 
 // This function makes sure that if a user if arrowing up and down
@@ -271,22 +256,24 @@ func tab() {
 	E.currentWithinRowIndex++
 }
 
+// FIX THIS
 func backspace() {
-
-	if E.currentWithinRowIndex < len(E.Lines[E.currentRowIndex]) {
-		E.Lines[E.currentRowIndex] = slices.Delete(E.Lines[E.currentRowIndex], E.currentWithinRowIndex, E.currentWithinRowIndex+1)
-	}
 
 	if len(E.Lines[E.currentRowIndex]) == 0 {
 		if E.cursorY != 1 {
 			E.cursorY--
 		}
 		E.Lines = slices.Delete(E.Lines, E.currentRowIndex, E.currentRowIndex+1)
-	}
+	} else {
 
-	if E.currentWithinRowIndex == 0 && E.Lines[E.currentRowIndex][0] == '\t' {
-		E.Lines[E.currentRowIndex] = slices.Delete(E.Lines[E.currentRowIndex], 0, 1)
-		E.cursorX = 1
+		if E.currentWithinRowIndex == 0 && E.Lines[E.currentRowIndex][0] == '\t' {
+			E.Lines[E.currentRowIndex] = slices.Delete(E.Lines[E.currentRowIndex], 0, 1)
+			E.cursorX = 1
+		} else {
+			E.Lines[E.currentRowIndex] = slices.Delete(E.Lines[E.currentRowIndex], E.currentWithinRowIndex, E.currentWithinRowIndex+1)
+		}
+
+		E.currentWithinRowIndex--
 	}
 
 }
