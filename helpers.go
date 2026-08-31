@@ -199,6 +199,8 @@ func refreshScreen() {
 	// updates MUST happen before redrawing, duh.
 	updateCurrentRowVar()
 
+	updateCurrentWithinRowIndex()
+
 	// Relies on currentRow to be updated
 	// Inefficient because not every key input is an arrow movement up or down
 	// Will not worry about this optimization for now
@@ -207,6 +209,19 @@ func refreshScreen() {
 	cleanupScreen()
 	displayFileContents()
 	displayCursor()
+}
+
+func updateCurrentWithinRowIndex() {
+
+	// Need to calculate the index that E.cursorX is actually hovering over because tabs mess this up.
+	E.currentWithinRowIndex = E.cursorX - 1
+
+	for _, value := range E.Lines[E.currentRowIndex] {
+		if value == '\t' {
+			E.currentWithinRowIndex -= 7
+		}
+	}
+
 }
 
 // This function makes sure that if a user if arrowing up and down
@@ -235,7 +250,7 @@ func checkBounds() {
 	} else if len(E.Lines[E.currentRowIndex]) > 0 && E.Lines[E.currentRowIndex][0] == '\t' && E.cursorX < TAB_WIDTH {
 
 		E.cursorX = TAB_WIDTH
-		E.currentWithinRowIndex = 0
+		E.currentWithinRowIndex = 1
 
 	}
 }
@@ -264,8 +279,10 @@ func backspace() {
 		E.Lines[E.currentRowIndex] = slices.Delete(E.Lines[E.currentRowIndex], E.cursorX-1, E.cursorX)
 	}
 
-	if len(E.Lines[E.currentRowIndex]) == 1 {
-		E.cursorY--
+	if len(E.Lines[E.currentRowIndex]) == 0 {
+		if E.cursorY != 1 {
+			E.cursorY--
+		}
 		E.Lines = slices.Delete(E.Lines, E.currentRowIndex, E.currentRowIndex+1)
 	}
 
@@ -273,18 +290,8 @@ func backspace() {
 
 func enter() {
 
-	// Need to calculate the index that E.cursorX is actually hovering over because tabs mess this up.
-	E.currentWithinRowIndex = E.cursorX - 1
-
-	for _, value := range E.Lines[E.currentRowIndex] {
-		if value == '\t' {
-			E.currentWithinRowIndex -= 7
-		}
-	}
-
 	// If the enter is the at end of the current line
 	if E.cursorX == len(E.Lines[E.currentRowIndex])+1 {
-
 		E.Lines = slices.Insert(E.Lines, E.currentRowIndex+1, []rune{})
 
 		// Otherwise in the midst of a given line
