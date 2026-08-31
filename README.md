@@ -14,5 +14,5 @@ The size of a tab (\t) is assumed to be 8 pixels. This can and will create probl
 The editor reads in bytes, no runes. Therefore, text in the editor is limited to ASCII.
 
 ### Fix/Next Steps: 
-- fix backspacing with tabs
+- fix backspacing with tabs. A lot of issues caused by improper use of cursorX vs currentWithinRowIndex.
 - Saving Changes
