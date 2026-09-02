@@ -213,6 +213,10 @@ func refreshScreen() {
 // that their cursor stays in the bounds of the E.Lines row
 func checkBounds() {
 
+	if len(E.Lines) == 0 {
+		return
+	}
+
 	E.currentRowIndex = E.currentRow - 1
 
 	// No need to add extra 1 for E.cursorX 1-indexing because len() is total runes, not 0-indexed.
@@ -273,9 +277,23 @@ func backspace() {
 			E.Lines[E.currentRowIndex] = slices.Delete(E.Lines[E.currentRowIndex], E.currentWithinRowIndex, E.currentWithinRowIndex+1)
 		}
 
-		E.currentWithinRowIndex--
 	}
 
+}
+
+func calculateWithinRowIndex() {
+	E.currentWithinRowIndex = 0
+	positionX := 1
+	for _, value := range E.Lines[E.currentRowIndex] {
+		if positionX == E.cursorX {
+			break
+		} else if value == '\t' {
+			positionX += 8
+		} else {
+			positionX++
+		}
+		E.currentWithinRowIndex++
+	}
 }
 
 func enter() {
@@ -309,6 +327,8 @@ func moveCursor(input byte) {
 			E.rowOffset--
 		}
 
+		calculateWithinRowIndex()
+
 	case DOWN_ARROW:
 
 		// Prevents out of bounds errors by setting a limit.
@@ -322,6 +342,8 @@ func moveCursor(input byte) {
 		} else {
 			E.rowOffset++
 		}
+
+		calculateWithinRowIndex()
 
 	case RIGHT_ARROW:
 		if E.cursorX != furthestRight {
