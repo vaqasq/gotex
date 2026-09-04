@@ -14,5 +14,5 @@ The size of a tab (\t) is assumed to be 8 pixels. This can and will create probl
 The editor reads in bytes, no runes. Therefore, text in the editor is limited to ASCII.
 
 ### Fix/Next Steps: 
-- fix up logic such that you can work on a new file. then write to file and done.
+- go through functions and fix logic and E.currentWithinRowIndex
 - Saving Changes
