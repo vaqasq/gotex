@@ -393,6 +393,10 @@ func parseArgs() *os.File {
 		log.Panicf("Error in bufio.scanner: %v", err)
 	}
 
+	if len(E.Lines) == 0 {
+		E.Lines = append(E.Lines, []rune{})
+	}
+
 	return file
 
 }
