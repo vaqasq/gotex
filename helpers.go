@@ -416,6 +416,34 @@ func run() {
 
 }
 
+func saveFile(name string) {
+
+	newFile, err := os.Create(name)
+	if err != nil {
+		fmt.Println("Your file could not be saved.")
+		return
+	}
+
+	writer := bufio.NewWriter(newFile)
+
+	defer newFile.Close()
+
+	for _, line := range E.Lines {
+		_, err := writer.WriteString(string(line))
+		if err != nil {
+			fmt.Println("Your file could not be saved.")
+			return
+		}
+	}
+
+	err = writer.Flush()
+	if err != nil {
+		fmt.Println("Your file could not be saved.")
+		return
+	}
+
+}
+
 func processKeyPress() (exit bool) {
 
 	// Bufio's implementation greatly reduces sys calls, requests 4kb of memory.

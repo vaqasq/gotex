@@ -19,4 +19,5 @@ func main() {
 
 	run()
 
+	saveFile(file.Name())
 }
